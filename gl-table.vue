@@ -99,9 +99,9 @@ export default {
       try {
         this.list = await api.find(this.type, query)
         //this.addNew()
-        this.lists = this.doGroupBy(this.list)
-        if (this.lists.length==0) this.addGroup()
-        if (!this.groupBy && this.lists[0].list.length==0) this.addNew(0)
+        // this.lists = this.doGroupBy(this.list)
+        // if (this.lists.length==0) this.addGroup()
+        // if (!this.groupBy && this.lists[0].list.length==0) this.addNew(0)
         this.$emit('loaded', this.lists)
       } catch (error) {
         this.$notify({
@@ -112,81 +112,6 @@ export default {
         })
       }
       this.loading = false
-    },
-    doGroupBy(list) {
-      if (this.groupBy) {
-        const result = []
-        const cache = {}
-        list.forEach((item,i) => {
-          const value = item[this.groupBy.field] || "None"
-          if (cache[value]) {
-            cache[value].push(item)
-          } else {
-            cache[value] = [item]
-            result.push({group:value, list: cache[value], show: true, header: true, key:result.length})
-          }
-        })
-        return result
-      } else {
-        return [{group:'default', list: list, show: true, header: false, key:0}]
-      }
-    },
-    addGroup() {
-      if (this.groupBy) {
-        const groupName = 'New...'
-        this.lists.splice(0, 0, {group:groupName, list: [], show: true, header: true, key:this.lists.length+1})
-        const row = this.addNew(0)
-        row[this.groupBy.field] = groupName
-        this.save(row, this.groupBy)
-        this.$nextTick(() => {
-          let tables = this.$refs.theTable
-          this.createGroupSortable(tables[tables.length-1])
-        })
-      }
-    },
-    groupChanged(group) {
-      if (this.groupBy) {
-        group.list.forEach(item => {
-          item[this.groupBy.field] = group.group
-        })        
-        this.updateSort()
-      }
-    },
-    createGroupSortable(table) {
-      const tableEl = Array.isArray(table) ? table[0].$el : table.$el
-      const group = tableEl.dataset.group
-      const el = tableEl.querySelectorAll('.el-table__body-wrapper > table > tbody')[0]
-      el.dataset.group = group
-      return Sortable.create(el, {
-        dataGroup: group,
-        handle: ".handle",
-        group: "group",
-        ghostClass: 'sortable-ghost',
-        setData: function (dataTransfer) {
-          // to avoid Firefox bug
-          // Detail see : https://github.com/RubaXa/Sortable/issues/1012
-          dataTransfer.setData('Text', '')
-        },
-        onEnd: async (evt) => {
-          const fromGroup = getGroup(evt.from)
-          const toGroup = getGroup(evt.to)
-          const from = this.lists.find(l => l.group == fromGroup)
-          const to = this.lists.find(l => l.group == toGroup)
-          const row = from.list.splice(evt.oldIndex, 1)[0]
-          if (this.groupBy) {
-            row[this.groupBy.field] = to.group
-          }
-          to.list.splice(evt.newIndex, 0, row)
-          await this.updateSort()
-        }
-      })
-
-      function getGroup(el) {
-        while(el!=null) {
-          if (el.dataset.list) return el.dataset.list
-          el = el.parentElement
-        }
-      }
     },
     async updateSort() {
       if (!this.sort) return
