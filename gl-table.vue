@@ -1,6 +1,7 @@
 
 <template>
   <ui-table 
+    :type="type"
     :loading="loading"
     :list="list"
     :detail="detail"
