@@ -11,6 +11,7 @@
   @cancel="$router.go(-1)"
   @docs-added="docsAdded" 
   @docs-removed="docsRemoved"
+  @click="click"
   />
 </template>
 
