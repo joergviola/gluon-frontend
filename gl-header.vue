@@ -11,7 +11,10 @@
                     :key="i"
                 >{{m.name.startsWith('@') ? m.name.substring(1) : $t('route.'+m.name)}}</el-breadcrumb-item>
             </el-breadcrumb>            
-            <div v-if="user" style="text-align: right;">
+            <div v-if="user" style="text-align: right; font-size: 14px">
+                <span style="padding-right: 7px">
+                <slot name="custom"></slot>
+                </span>
                 <avatar :user="user" cls="header-avatar"/>
                 <el-dropdown style="height: 60px; line-height: 60px; margin-left: auto;margin-right: 25px">
                     <span class="el-dropdown-link text-right">
