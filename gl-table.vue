@@ -103,7 +103,7 @@ export default {
         // this.lists = this.doGroupBy(this.list)
         // if (this.lists.length==0) this.addGroup()
         // if (!this.groupBy && this.lists[0].list.length==0) this.addNew(0)
-        this.$emit('loaded', this.lists)
+        this.$emit('loaded', this.list)
       } catch (error) {
         this.$notify({
           title: 'Error',
