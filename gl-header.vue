@@ -97,7 +97,7 @@ export default {
     padding: 10px 20px;
 }
 
-header .header-avatar {
+.header .header-avatar {
     margin-top: 10px;
     margin-right: 10px;
     vertical-align: -70%;

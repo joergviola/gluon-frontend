@@ -1,12 +1,6 @@
 <template>
    <div v-if="user" :style="styles">
-      <el-menu
-         default-active="2"
-         background-color="#666666"
-         text-color="#fff"
-         active-text-color="#00A4FF"
-         style="width: 100%"
-      >
+      <el-menu>
          <el-menu-item 
          v-for="(route, i) in $router.options.routes" 
          v-if="showItem(route)" 
@@ -58,3 +52,24 @@ export default {
     }
 }
 </script>
+
+<style scoped>
+.el-menu {
+   background-color: transparent;
+   border: none;
+   color: white;
+   width: 100%;
+}
+
+.el-menu-item:hover {
+   background-color: #777777;
+}
+
+.el-menu-item.is-active {
+   font-weight: bold;
+}
+
+a {
+   color: white;
+}
+</style>
