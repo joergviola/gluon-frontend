@@ -28,8 +28,7 @@
                   :item="filterQuery" 
                   :fields="filterFields.search" 
                   :hideDefaultButtons="true"
-                  @save="save"
-                  @cancel="showFilter = false"
+                  size="mini"
                 />                
               </el-card>
             </el-col>
@@ -40,8 +39,7 @@
                   :item="filterQuery" 
                   :fields="filterFields.group" 
                   :hideDefaultButtons="true"
-                  @save="save"
-                  @cancel="showFilter = false"
+                  size="mini"
                 />                
               </el-card>
             </el-col>
@@ -49,8 +47,9 @@
         </div>
       </el-collapse-transition>
 
-      <el-button v-if="showFilter" @click="showFilter = false">{{$t('ui.list.cancel')}}</el-button>
-      <el-button @click="onShowFilter">{{$t('ui.list.showFilter')}}</el-button>
+      <el-button v-if="!showFilter && filter" @click="showFilter = true">{{$t('ui.list.showFilter')}}</el-button>
+      <el-button v-if="showFilter" @click="showFilter = false">{{$t('ui.list.close')}}</el-button>
+      <el-button v-if="showFilter" type="primary" @click="onSearch">{{$t('ui.list.search')}}</el-button>
 
       <slot name="header"></slot>
     </span>
@@ -66,7 +65,7 @@ import api from 'gluon-api'
 export default {
   name: 'GluonAPITable',
   components: { uiTable, uiEditor },
-  props: ['type', 'detail', 'columns', 'with', 'query', 'order', 'template', 'createBy', 'allowDelete', 'sort', 'groupBy', 'filter'],
+  props: ['type', 'detail', 'columns', 'with', 'query', 'join', 'order', 'template', 'createBy', 'allowDelete', 'sort', 'groupBy', 'filter'],
   data() {
     return {
       list:[],
@@ -143,6 +142,10 @@ export default {
           async function setOption() {
             const items = await api.find(field.ref, { and: field.query || {} })
             mapped.options = items
+            const select = {}
+            select[field.id] = null
+            select[field.display] = "Wählen"
+            mapped.options.splice(0, 0, select)
           }
         })
       }
@@ -165,6 +168,9 @@ export default {
       if (this.sort) {
         query.order = {}
         query.order[this.sort] = 'ASC'
+      }
+      if (this.join) {
+        query.join = this.join
       }
       try {
         this.list = await api.find(this.type, query)
@@ -276,11 +282,7 @@ export default {
         })
       })
     },
-    onShowFilter() {
-      if (!this.showFilter) {
-        this.showFilter = true;
-        return;
-      }
+    onSearch() {
       this.getList()
     },
     exportCSV(name, columns) {
