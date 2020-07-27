@@ -2,7 +2,7 @@
 <template>
   <ui-table 
     :type="type"
-    :loading="loading"
+    v-loading="loading"
     :list="list"
     :detail="detail"
     :columns="columns"
@@ -17,7 +17,41 @@
     @remove="remove"
     @sort="updateSort"
   >
-    <span v-if="$slots['header']" slot="header">
+    <span v-if="$slots['header'] || filter" slot="header">
+      <el-collapse-transition>
+        <div v-show="showFilter" style="padding: 20px">
+          <el-row :gutter="40">
+            <el-col :xs="24" :md="12" align="left">
+              <el-card>
+                <ui-editor
+                  :type="type" 
+                  :item="filterQuery" 
+                  :fields="filterFields.search" 
+                  :hideDefaultButtons="true"
+                  @save="save"
+                  @cancel="showFilter = false"
+                />                
+              </el-card>
+            </el-col>
+            <el-col :xs="24" :md="12" align="left">
+              <el-card>
+                <ui-editor
+                  :type="type" 
+                  :item="filterQuery" 
+                  :fields="filterFields.group" 
+                  :hideDefaultButtons="true"
+                  @save="save"
+                  @cancel="showFilter = false"
+                />                
+              </el-card>
+            </el-col>
+          </el-row>
+        </div>
+      </el-collapse-transition>
+
+      <el-button v-if="showFilter" @click="showFilter = false">{{$t('ui.list.cancel')}}</el-button>
+      <el-button @click="onShowFilter">{{$t('ui.list.showFilter')}}</el-button>
+
       <slot name="header"></slot>
     </span>
   </ui-table>
@@ -26,17 +60,22 @@
 
 <script>
 import uiTable from 'gluon-ui/gl-table'
+import uiEditor from 'gluon-ui/gl-editor'
 import api from 'gluon-api'
 
 export default {
   name: 'GluonAPITable',
-  components: { uiTable },
-  props: ['type', 'detail', 'columns', 'with', 'query', 'order', 'template', 'createBy', 'allowDelete', 'sort', 'groupBy'],
+  components: { uiTable, uiEditor },
+  props: ['type', 'detail', 'columns', 'with', 'query', 'order', 'template', 'createBy', 'allowDelete', 'sort', 'groupBy', 'filter'],
   data() {
     return {
       list:[],
       lists: [],
       loading: true,
+      showFilter: false,
+      filterQuery: {},
+      filterFields: [],
+      filterLoaded: false,
     }
   },
   computed: {
@@ -61,7 +100,7 @@ export default {
         if (col.editable && !col.type) return i // Does not support editable functions
       }
       return null
-    }
+    },
   },
   watch: {
     query() {
@@ -78,6 +117,36 @@ export default {
     },
     list() {
       this.repairTextAreas()
+    },
+    showFilter() {
+      if (this.filterLoaded) return
+      this.filterLoaded = true
+
+      this.filterFields = {
+        search: map(this.filter.search),
+        group: map(this.filter.group),
+      }
+
+      function map(fields) {
+        return fields.map(field => {
+          if (field.type!='to-one') return field;
+          const mapped = { 
+            name: field.name, 
+            type: 'select', 
+            options: [],
+            display: field.display,
+            id: 'id'
+          }
+          setOption()
+          return mapped
+
+          async function setOption() {
+            const items = await api.find(field.ref, { and: field.query || {} })
+            mapped.options = items
+          }
+        })
+      }
+
     }
   },
   created() {
@@ -87,9 +156,9 @@ export default {
   methods: {
     async getList() {
       this.loading = true
+
       const query =  {
-        and: this.query || this.template,
-        with: this.with
+        and: Object.assign({}, this.filterQuery, this.query || this.template),
       }
       if (this.with) query.with = this.with
       if (this.order) query.order = this.order
@@ -206,6 +275,13 @@ export default {
           })
         })
       })
+    },
+    onShowFilter() {
+      if (!this.showFilter) {
+        this.showFilter = true;
+        return;
+      }
+      this.getList()
     },
     exportCSV(name, columns) {
       const data = []
