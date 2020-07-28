@@ -5,7 +5,7 @@
     v-loading="loading"
     :list="list"
     :detail="detail"
-    :columns="columns"
+    :columns="actualColumns"
     :template="template"
     :i18n-key="`type.${type}.`"
     :create-by="createBy"
@@ -23,6 +23,9 @@
           <el-row :gutter="40">
             <el-col :xs="24" :md="12" align="left">
               <el-card>
+                <div slot="header" class="card-header">
+                  <b>{{$t('ui.list.filter')}}</b>
+                </div>
                 <ui-editor
                   :type="type" 
                   :item="filterQuery" 
@@ -34,9 +37,12 @@
             </el-col>
             <el-col :xs="24" :md="12" align="left">
               <el-card>
+                <div slot="header" class="card-header">
+                  <b>{{$t('ui.list.group')}}</b>
+                </div>
                 <ui-editor
                   :type="type" 
-                  :item="filterQuery" 
+                  :item="grouping" 
                   :fields="filterFields.group" 
                   :hideDefaultButtons="true"
                   size="mini"
@@ -73,8 +79,10 @@ export default {
       loading: true,
       showFilter: false,
       filterQuery: {},
+      grouping: {},
       filterFields: [],
       filterLoaded: false,
+      actualColumns: [],
     }
   },
   computed: {
@@ -123,10 +131,13 @@ export default {
 
       this.filterFields = {
         search: map(this.filter.search),
-        group: map(this.filter.group),
+        group: this.filter.group.map(field => ({
+            name: field.name, 
+            type: 'checkbox', 
+        })),
       }
 
-      function map(fields) {
+      function map(fields, type) {
         return fields.map(field => {
           if (field.type!='to-one') return field;
           const mapped = { 
@@ -172,6 +183,22 @@ export default {
       })
       return result
     },
+    setActualColumns() {
+      let columns = this.columns
+      if (this.filter && this.filter.group) {
+        const groupCols = []
+        this.filter.group.forEach(group => {
+          if (this.grouping[group.name]) {
+            groupCols.push(...group.columns)
+          }
+        })
+        if (groupCols.length>0) {
+          groupCols.push(...this.filter.reducedColumns)
+          columns = groupCols
+        }
+      }
+      this.actualColumns = columns
+    },
     async getList() {
       this.loading = true
 
@@ -187,6 +214,8 @@ export default {
       if (this.join) {
         query.join = this.join
       }
+      this.group(query)
+      this.setActualColumns()
       try {
         this.list = await api.find(this.type, query)
         //this.addNew()
@@ -203,6 +232,28 @@ export default {
         })
       }
       this.loading = false
+    },
+    group(query) {
+      const groupBy = []
+      const select = []
+      const withs = {}
+      if (!this.filter || !this.filter.group) return
+      this.filter.group.forEach(group => {
+        if (this.grouping[group.name]) {
+          groupBy.push(group.name)
+          select.push(group.name)
+          Object.assign(withs, group.with)
+        }
+      })
+      this.filter.reducedColumns.forEach(col => {
+        col.select.as = col.name
+        select.push(col.select)
+      })
+      if (groupBy.length>0) {
+        query.group = groupBy
+        query.select = select
+        query.with = withs
+      }
     },
     async updateSort() {
       if (!this.sort) return
