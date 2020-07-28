@@ -157,11 +157,26 @@ export default {
     this.repairTextAreas()
   },
   methods: {
+    getFilterQuery() {
+      const result = {}
+      if (!this.filter) return result
+      this.filter.search.forEach(field => {
+        switch (field.type) {
+          case 'daterange':
+            result[field.name] = {'>=': this.filterQuery[field.name]}
+            result[field.to] = {'<=': this.filterQuery[field.to]}
+            break;
+          default:
+            result[field.name] = this.filterQuery[field.name]
+        }
+      })
+      return result
+    },
     async getList() {
       this.loading = true
 
       const query =  {
-        and: Object.assign({}, this.filterQuery, this.query || this.template),
+        and: Object.assign({}, this.getFilterQuery(), this.query || this.template),
       }
       if (this.with) query.with = this.with
       if (this.order) query.order = this.order
@@ -283,6 +298,7 @@ export default {
       })
     },
     onSearch() {
+      this.showFilter = false
       this.getList()
     },
     exportCSV(name, columns) {
