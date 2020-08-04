@@ -33,7 +33,7 @@
 
 <script>
 import Avatar from 'gluon-ui/gl-avatar'
-import api from '@/api'
+import api from 'gluon-api'
 import store from '@/util/Store.js'
 
 export default {
