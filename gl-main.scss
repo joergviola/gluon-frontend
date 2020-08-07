@@ -1,0 +1,101 @@
+
+html, body {
+    padding: 0;
+    margin: 0;
+    height: 100%;
+    font-family: Avenir, Helvetica, Arial, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    color: #2c3e50;
+}
+
+#app {
+  height: 100%;
+}
+
+input, select, textarea {
+  font-family: Avenir, Helvetica, Arial, sans-serif;
+}
+
+.el-aside {
+
+  a {
+    font-weight: bold;
+    color: #FFFFFF;
+
+    &.router-link-exact-active {
+      color: #42b983;
+    }
+  }
+
+}
+  
+
+a {
+  text-decoration: none;
+}
+
+.text-right {
+  text-align: right;
+}
+
+.pull-right {
+  float: right;
+}
+
+.pull-left {
+  float: left;
+}
+
+.pull-clear {
+  clear: both;
+}
+
+.mb-4 {
+  margin-bottom: 20px
+}
+
+.no-border .el-input__inner, .no-border .el-textarea__inner {
+  border: none;
+}
+
+.no-border .el-textarea__inner {
+  resize: none;
+}
+
+.el-input.is-disabled.no-border .el-input__inner {
+  background-color: transparent;
+}
+.el-input.is-disabled .el-input__inner {
+  background-color: transparent!important;
+}
+#app .el-table th>.cell {
+  padding-left: 25px;
+}
+.gantt-critical g rect  {
+  fill: rgb(200, 64, 0, 0.8) !important;
+}
+.gantt-critical g text  {
+fill: black !important;
+}
+
+.gantt-warn g rect  {
+  fill: rgb(64, 255, 0, 0.8) !important;
+}
+.gantt-warn g text  {
+fill: black !important;
+}
+
+.gantt-normal g rect  {
+  fill: rgb(0,164,255, 0.8) !important;
+}
+.gantt-normal g text  {
+fill: #000000 !important;
+}
+
+.gantt-off g rect  {
+  fill: rgb(128, 128, 128, 0.8) !important;
+}
+.gantt-off g text  {
+fill: white !important;
+}

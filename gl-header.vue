@@ -1,7 +1,7 @@
 <template>
     <div style="display: flex; justify-content: flex-start;">
         <div style="width: 150px" >
-            <img height="50px" style="margin: 5px" src="@/assets/img/logo.png" />
+            <img height="50px" style="margin: 5px" src="@/assets/logo.png" />
         </div>
         <div  style="flex-grow: 1; display: flex; justify-content: space-between; align-items: stretch;">
             <el-breadcrumb separator-class="el-icon-arrow-right" style="height: 60px; line-height: 60px">
