@@ -59,6 +59,11 @@
 
       <slot name="header"></slot>
     </span>
+    <span slot="footer">
+      <i @click="exportCSV()" class="el-icon-download"  :title="$t('ui.list.export')"/>
+      <i @click="importCSV()" class="el-icon-upload2" :title="$t('ui.list.import')"/>
+      <input ref="file" type="file" style="display:none" @change="importCSVData"/> 
+    </span>
   </ui-table>
 </template>
 
@@ -71,7 +76,7 @@ import api from 'gluon-api'
 export default {
   name: 'GluonAPITable',
   components: { uiTable, uiEditor },
-  props: ['type', 'detail', 'columns', 'with', 'query', 'join', 'order', 'template', 'createBy', 'allowDelete', 'sort', 'groupBy', 'filter'],
+  props: ['type', 'detail', 'columns', 'with', 'query', 'join', 'order', 'template', 'createBy', 'allowDelete', 'sort', 'groupBy', 'filter', 'onImport', 'onExport'],
   data() {
     return {
       list:[],
@@ -352,12 +357,24 @@ export default {
       this.showFilter = false
       this.getList()
     },
-    exportCSV(name, columns) {
+    exportCSV(name=this.type + '.csv', columns) {
       const data = []
+      if (!columns) {
+        if (this.onExport) {
+          columns = this.onExport(null)
+        } else {
+          columns = this.columns.map(c => c.name)
+        }
+      }
       data.push(columns.join(','))
       this.list.forEach(row => {
         if (!row.id) return
-        const line = columns.map(col => encode(_.get(row, col)))
+        let line = null
+        if (this.onExport) {
+          line = this.onExport(row)
+        } else {
+          line = columns.map(col => encode(_.get(row, col)))
+        }
         data.push(line.join(','))
       });
 
@@ -378,83 +395,94 @@ export default {
         .replace('\n', '\\n')
       }
     },
-    // async importCSV(file) {
-    //   const self = this
-    //   const reader = new FileReader();
-    //   reader.onload = async function(e) {
-    //     const data = parse(e.target.result)
-    //     const json = toData(data)
-    //     const update = toUpdate(json)
-    //     const create = toCreate(json)
-    //     console.log(json)
-    //     await api.updateBulk(self.type, update)
-    //     await api.create(self.type, create)
-    //     self.getList()
-    //   };
-    //   reader.readAsText(file.raw)
+    importCSV() {
+      this.$refs.file.click()
+    },
+    async importCSVData(event) {
+      const file = event.target.files[0]
+      const self = this
+      const reader = new FileReader();
+      reader.onload = async function(e) {
+        const data = parse(e.target.result)
+        const json = toData(data)
+        const update = toUpdate(json)
+        const create = toCreate(json)
+        if (Object.keys(update).length>0) {
+          await api.updateBulk(self.type, update)
+        }
+        if (create.length>0) {
+          await api.create(self.type, create)
+        }
+        self.getList()
+      };
+      reader.readAsText(file)
 
-    //   function parse(text) {
-    //     const data = []
-    //     text.split("\n").forEach((line,i) => {
-    //       if (line=="") return
-    //       const item = line.split(',')
-    //       data.push(line.split(','))
-    //     })
-    //     return data
-    //   }
+      function parse(text) {
+        const data = []
+        text.split("\n").forEach((line,i) => {
+          if (line=="") return
+          const item = line.split(',')
+          data.push(line.split(','))
+        })
+        return data
+      }
 
-    //   function toData(data) {
+      function toData(data) {
+        const columns = data[0]
+        const json = []
+        data.forEach((line,i) =>{
+          if (i==0) return
+          const item = self.onImport 
+            ? self.onImport(line)
+            : parseLine(line, columns)
+          if (item.id=="") item[self.sort] = self.list.length+i
+          json.push(item)
+        })
+        return json
+      }
 
+      function parseLine(line, columns) {
+          const item = Object.assign({}, self.template)
+          columns.forEach((col,j) => {
+            const path = col.split('.')
+            let o = item
+            let type = self.type
+            path.forEach((name, n) => {
+              if (n<path.length-1) {
+                if (!o._meta) o._meta = {}
+                if (!o[name]) {
+                  o[name] = { }
+                } else {
+                  o[name] = Object.assign({}, o[name])
+                }
+                o._meta[name] = {
+                  one: name,
+                  that: type+"_id",
+                  ignore: false
+                }
+                type = name
+                o = o[name]
+              } else {
+                o[name] = line[j]
+              }
+            })
+          })
+          return item
+      }
 
-    //     const columns = data[0]
-    //     const json = []
-    //     data.forEach((line,i) =>{
-    //       if (i==0) return
-    //       const item = Object.assign({}, self.template)
-    //       columns.forEach((col,j) => {
-    //         const path = col.split('.')
-    //         let o = item
-    //         let type = self.type
-    //         path.forEach((name, n) => {
-    //           if (n<path.length-1) {
-    //             if (!o._meta) o._meta = {}
-    //             if (!o[name]) {
-    //               o[name] = { }
-    //             } else {
-    //               o[name] = Object.assign({}, o[name])
-    //             }
-    //             o._meta[name] = {
-    //               one: name,
-    //               that: type+"_id",
-    //               ignore: false
-    //             }
-    //             type = name
-    //             o = o[name]
-    //           } else {
-    //             o[name] = line[j]
-    //           }
-    //           console.log(i, name, item, o, line[j])
-    //         })
-    //       })
-    //       if (item.id=="") item[self.sort] = self.list.length+i
-    //       json.push(item)
-    //     })
-    //     return json
-    //   }
+      function toUpdate(json) {
+        const data = {}
+        json.forEach(row => {
+          if (!row.id) return
+          data[row.id] = row
+        })
+        return data
+      }
 
-    //   function toUpdate(json) {
-    //     const data = {}
-    //     json.forEach(row => {
-    //       if (!row.id) return
-    //       data[row.id] = row
-    //     })
-    //     return data
-    //   }
-
-    //   function toCreate(json) {
-    //     return json.filter(row => !row.id)
-    //   }
-    // }
+      function toCreate(json) {
+        return json.filter(row => !row.id)
+      }
+    }
   },
 
 }
