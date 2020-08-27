@@ -7,11 +7,13 @@
   :buttons="buttons" 
   :image="image" 
   :readonly="readonly" 
+  :hideCancel="hideCancel"
   @save="save"
   @cancel="$router.go(-1)"
   @docs-added="docsAdded" 
   @docs-removed="docsRemoved"
   @click="click"
+  @change="onChange"
   />
 </template>
 
@@ -22,13 +24,19 @@ import api from 'gluon-api'
 export default {
   name: "GlApiEditor",
   components: { uiEditor },
-  props: ['type', 'id', 'fields', 'buttons', 'with', 'template', 'image', 'reload'],
+  props: ['type', 'id', 'fields', 'buttons', 'with', 'template', 'image', 'reload', 'hideCancel'],
   data() {
     return {
       item: this.template || {},
       toOnes: this.initToOnes(),
       uploadDocs: {},
       loading: false
+    }
+  },
+  watch: {
+    async id() {
+      await this.load()
+      this.$emit('update', Object.assign({}, this.item))
     }
   },
   computed: {
@@ -101,6 +109,8 @@ export default {
     docsRemoved(docs) {
       this.uploadDocs[docs.path] = {remove:true, docs:docs.files}
     },
+    onChange(field) {
+    },
     async save() {
       this.loading = true
       try {
@@ -149,6 +159,7 @@ export default {
       }
       this.loading = false
       this.$emit('update', Object.assign({}, this.item))
+      this.$emit('change', Object.assign({}, this.item))
     },
   }
 }
