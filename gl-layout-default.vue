@@ -7,7 +7,7 @@
                 <router-menu />
                 <router-menu :bottom="true" />
                 <div style="text-align: center; font-size: 70%; padding-bottom: 10px">
-                    <router-link to="/version"><span>gluon 21.07.20</span></router-link>
+                    <router-link to="/version"><span>gluon</span></router-link>
                 </div>
             </div>
             <div class="content">
