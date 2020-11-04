@@ -12,13 +12,14 @@ import langEN from 'gluon-ui/lang/en'
 import moment from 'moment'
 import api from 'gluon-api'
 
-export default function init(options) {
+export default async function init(options) {
   options = Object.assign({
     routes: [],
     locale: "de",
     messages: {},
-    api: 'http://localhost/fer-app/public',
   }, options)
+
+  api.localHost = options.localHost
 
   Vue.prototype.$api = api
   Vue.prototype._ = _
@@ -42,7 +43,7 @@ export default function init(options) {
   })
   moment.locale(options.locale);
   
-  api.checkLogin()
+  await api.checkLogin()
 
   return {
     router,

@@ -9,7 +9,7 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "gluon-api": "^1.0.0",
+    "gluon-api": "file:../gluon-api",
     "gluon-ui": "^1.0.0"
   }
 }
