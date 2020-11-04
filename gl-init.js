@@ -19,8 +19,6 @@ export default async function init(options) {
     messages: {},
   }, options)
 
-  api.localHost = options.localHost
-
   Vue.prototype.$api = api
   Vue.prototype._ = _
 
@@ -42,6 +40,13 @@ export default async function init(options) {
     }, options.messages)
   })
   moment.locale(options.locale);
+
+  api.localHost = options.localHost
+  api.onAccessDenied = options.onAccessDenied || function () {
+    console.log('Access denied, routeing to /')
+    router.go('/')
+  }
+  api.onError = options.onError
   
   await api.checkLogin()
 
