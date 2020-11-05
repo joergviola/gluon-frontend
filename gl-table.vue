@@ -313,6 +313,9 @@ export default {
       }
     },
     async remove(row) {
+      if (typeof this.allowDelete == 'function') {
+        if (!this.allowDelete(row)) return
+      } 
       try {
         if (row.id) {
           await api.delete(this.type, row.id)
