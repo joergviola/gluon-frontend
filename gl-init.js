@@ -28,7 +28,7 @@ export default async function init(options) {
     locale: elementLocale,
     size: 'small'
   });
-  
+ 
   const router = createRouter(options.routes)
   
   const i18n = new VueI18n({
